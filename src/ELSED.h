@@ -45,6 +45,9 @@ struct ELSEDParams {
   bool treatJunctions = true;
   // List of junction size that will be tested (in pixels)
   std::vector<int> listJunctionSizes = {5, 7, 9};
+
+  // If pre computed gradients
+  bool givenFields = false;
 };
 
 /**
@@ -66,17 +69,17 @@ class ELSED {
    * Bigger images will generate more segments.
    * @return The list of detected segments
    */
-  Segments detect(const cv::Mat &image);
+  Segments detect(const cv::Mat &image, const cv::Mat &df, const cv::Mat &af);
 
-  SalientSegments detectSalient(const cv::Mat &image);
+  SalientSegments detectSalient(const cv::Mat &image, const cv::Mat &df, const cv::Mat &af);
 
-  ImageEdges detectEdges(const cv::Mat &image);  // NOLINT
+  ImageEdges detectEdges(const cv::Mat &image, const cv::Mat &df, const cv::Mat &af);  // NOLINT
 
   const LineDetectionExtraInfo &getImgInfo() const;
 
   const LineDetectionExtraInfoPtr &getImgInfoPtr() const;
 
-  void processImage(const cv::Mat &image);
+  void processImage(const cv::Mat &image, const cv::Mat &df, const cv::Mat &af);
 
   void clear();
 
@@ -89,6 +92,9 @@ class ELSED {
 
   static LineDetectionExtraInfoPtr
   computeGradients(const cv::Mat &srcImg, short gradientTh);
+
+  static LineDetectionExtraInfoPtr
+  prepareGradients(const cv::Mat &srcImg, const cv::Mat &df, const cv::Mat &af, short gradientTh);
 
   ImageEdges getAllEdges() const;
 

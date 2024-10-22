@@ -10,20 +10,20 @@ namespace upm {
 ELSED::ELSED(const ELSEDParams &params) : params(params) {
 }
 
-Segments ELSED::detect(const cv::Mat &image) {
-  processImage(image);
+Segments ELSED::detect(const cv::Mat &image, const cv::Mat &df, const cv::Mat &af) {
+  processImage(image, df, af);
   // std::cout << "ELSED detected: " << segments.size() << " segments" << std::endl;
   return segments;
 }
 
-SalientSegments ELSED::detectSalient(const cv::Mat &image) {
-  processImage(image);
+SalientSegments ELSED::detectSalient(const cv::Mat &image, const cv::Mat &df, const cv::Mat &af) {
+  processImage(image, df, af);
   // std::cout << "ELSED detected: " << salientSegments.size() << " salient segments" << std::endl;
   return salientSegments;
 }
 
-ImageEdges ELSED::detectEdges(const cv::Mat &image) {
-  processImage(image);
+ImageEdges ELSED::detectEdges(const cv::Mat &image, const cv::Mat &df, const cv::Mat &af) {
+  processImage(image, df, af);
   return getSegmentEdges();
 }
 
@@ -31,7 +31,7 @@ const LineDetectionExtraInfo &ELSED::getImgInfo() const {
   return *imgInfo;
 }
 
-void ELSED::processImage(const cv::Mat &_image) {
+void ELSED::processImage(const cv::Mat &_image, const cv::Mat &df, const cv::Mat &af) {
   // Check that the image is a grayscale image
   cv::Mat image;
   switch (_image.channels()) {
@@ -62,7 +62,12 @@ void ELSED::processImage(const cv::Mat &_image) {
   }
 
   // Compute the input image derivatives
-  imgInfo = computeGradients(blurredImg, params.gradientThreshold);
+  if (params.givenFields)
+    imgInfo = prepareGradients(blurredImg, df, af, params.gradientThreshold);
+  else
+    imgInfo = computeGradients(blurredImg, params.gradientThreshold);
+
+  
 
   bool anchoThIsZero;
   uint8_t anchorTh = params.anchorThreshold;
@@ -132,6 +137,47 @@ LineDetectionExtraInfoPtr ELSED::computeGradients(const cv::Mat &srcImg, short g
     pGr[i] = sum < gradientTh ? 0 : sum;
     // Select between vertical or horizontal gradient
     pDir[i] = abs_dx >= abs_dy ? UPM_EDGE_VERTICAL : UPM_EDGE_HORIZONTAL;
+  }
+
+  return dstInfo;
+}
+
+LineDetectionExtraInfoPtr ELSED::prepareGradients(const cv::Mat &srcImg, const cv::Mat &df, const cv::Mat &af, short gradientTh) {
+  LineDetectionExtraInfoPtr dstInfo = std::make_shared<LineDetectionExtraInfo>();
+
+  int nRows = srcImg.rows;
+  int nCols = srcImg.cols;
+  int i;
+
+  dstInfo->imageWidth = srcImg.cols;
+  dstInfo->imageHeight = srcImg.rows;
+  dstInfo->gImgWO = df;
+  dstInfo->gImg = srcImg;
+  dstInfo->dirImg = af;
+
+  // const int16_t *pDX = dstInfo->dxImg.ptr<int16_t>();
+  // const int16_t *pDY = dstInfo->dyImg.ptr<int16_t>();
+  auto *pGr = dstInfo->gImg.ptr<int16_t>();
+  auto *pGrWO = dstInfo->gImgWO.ptr<int16_t>();
+  auto *pDir = dstInfo->dirImg.ptr<int16_t>();
+  int16_t abs_af, abs_af_128, abs_af_255;
+  const int totSize = nRows * nCols;
+  for (i = 0; i < totSize; ++i) {
+    // // Absolute value
+    // abs_dx = UPM_ABS(pDX[i]);
+    // // Absolute value
+    // abs_dy = UPM_ABS(pDY[i]);
+    // sum = abs_dx + abs_dy;
+    // // Divide by 2 the gradient
+    // pGrWO[i] = sum;
+    pGr[i] = pGrWO[i] < gradientTh ? 0 : pGrWO[i];
+    // Select between vertical or horizontal gradient
+
+    abs_af = UPM_ABS(pDir[i]);
+    abs_af_128 = UPM_ABS(pDir[i] - 128);
+    abs_af_255 = UPM_ABS(pDir[i] - 255);
+
+    pDir[i] = abs_af_128 >= abs_af || abs_af_128 >= abs_af_255 ? UPM_EDGE_HORIZONTAL : UPM_EDGE_VERTICAL;
   }
 
   return dstInfo;

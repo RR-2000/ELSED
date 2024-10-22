@@ -26,7 +26,7 @@ int main() {
   }
 
   upm::ELSED elsed;
-  upm::Segments segs = elsed.detect(img);
+  upm::Segments segs = elsed.detect(img, img, img);
   std::cout << "ELSED detected: " << segs.size() << " (large) segments" << std::endl;
 
   drawSegments(img, segs, CV_RGB(0, 255, 0), 2);
@@ -43,7 +43,7 @@ int main() {
   upm::ELSEDParams params;
   params.listJunctionSizes = {};
   upm::ELSED elsed_short(params);
-  segs = elsed_short.detect(img);
+  segs = elsed_short.detect(img, img, img);
   std::cout << "ELSED detected: " << segs.size() << " (short) segments" << std::endl;
 
   drawSegments(img, segs, CV_RGB(0, 255, 0), 2);
