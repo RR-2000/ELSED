@@ -69,8 +69,8 @@ PYBIND11_MODULE(pyelsed, m) {
         Computes ELSED: Enhanced Line SEgment Drawing in the input image.
     )pbdoc",
         py::arg("img"),
-        py::arg("af"),
         py::arg("df"),
+        py::arg("af"),
         py::arg("sigma") = 1,
         py::arg("gradientThreshold") = 30,
         py::arg("minLineLen") = 15,
