@@ -69,17 +69,17 @@ class ELSED {
    * Bigger images will generate more segments.
    * @return The list of detected segments
    */
-  Segments detect(const cv::Mat &image, const cv::Mat &df, const cv::Mat &af);
+  Segments detect(const cv::Mat &image, const cv::Mat &dfx, const cv::Mat &dfy);
 
-  SalientSegments detectSalient(const cv::Mat &image, const cv::Mat &df, const cv::Mat &af);
+  SalientSegments detectSalient(const cv::Mat &image, const cv::Mat &dfx, const cv::Mat &dfy);
 
-  ImageEdges detectEdges(const cv::Mat &image, const cv::Mat &df, const cv::Mat &af);  // NOLINT
+  ImageEdges detectEdges(const cv::Mat &image, const cv::Mat &dfx, const cv::Mat &dfy);  // NOLINT
 
   const LineDetectionExtraInfo &getImgInfo() const;
 
   const LineDetectionExtraInfoPtr &getImgInfoPtr() const;
 
-  void processImage(const cv::Mat &image, const cv::Mat &df, const cv::Mat &af);
+  void processImage(const cv::Mat &image, const cv::Mat &dfx, const cv::Mat &dfy);
 
   void clear();
 
@@ -94,7 +94,7 @@ class ELSED {
   computeGradients(const cv::Mat &srcImg, short gradientTh);
 
   static LineDetectionExtraInfoPtr
-  prepareGradients(const cv::Mat &srcImg, const cv::Mat &df, const cv::Mat &af, short gradientTh);
+  prepareGradients(const cv::Mat &srcImg, const cv::Mat &dfx, const cv::Mat &dfy, short gradientTh);
 
   ImageEdges getAllEdges() const;
 

@@ -24,8 +24,8 @@ inline py::tuple salient_segments_to_py(const upm::SalientSegments &ssegs) {
 }
 
 py::tuple compute_elsed(const py::array &py_img,
-                        const py::array &py_df,
-                        const py::array &py_af,
+                        const py::array &py_dfx,
+                        const py::array &py_dfy,
                         float sigma = 1,
                         float gradientThreshold = 30,
                         int minLineLen = 15,
@@ -38,12 +38,12 @@ py::tuple compute_elsed(const py::array &py_img,
 ) {
 
   py::buffer_info info_img = py_img.request();
-  py::buffer_info info_df = py_df.request();
-  py::buffer_info info_af = py_af.request();
+  py::buffer_info info_dfx = py_dfx.request();
+  py::buffer_info info_dfy = py_dfy.request();
 
   cv::Mat img(info_img.shape[0], info_img.shape[1], CV_8UC1, (uint8_t *) info_img.ptr);
-  cv::Mat df(info_df.shape[0], info_df.shape[1], CV_8UC1, (uint8_t *) info_df.ptr);
-  cv::Mat af(info_af.shape[0], info_af.shape[1], CV_8UC1, (uint8_t *) info_af.ptr);
+  cv::Mat dfx(info_dfx.shape[0], info_dfx.shape[1], CV_16SC1, (int16_t *) info_dfx.ptr);
+  cv::Mat dfy(info_dfy.shape[0], info_dfy.shape[1], CV_16SC1, (int16_t *) info_dfy.ptr);
 
   ELSEDParams params;
 
@@ -59,7 +59,7 @@ py::tuple compute_elsed(const py::array &py_img,
   params.givenFields = givenFields;
 
   ELSED elsed(params);
-  upm::SalientSegments salient_segs = elsed.detectSalient(img, df, af);
+  upm::SalientSegments salient_segs = elsed.detectSalient(img, dfx, dfy);
 
   return salient_segments_to_py(salient_segs);
 }
@@ -69,8 +69,8 @@ PYBIND11_MODULE(pyelsed, m) {
         Computes ELSED: Enhanced Line SEgment Drawing in the input image.
     )pbdoc",
         py::arg("img"),
-        py::arg("df"),
-        py::arg("af"),
+        py::arg("dfx"),
+        py::arg("dfy"),
         py::arg("sigma") = 1,
         py::arg("gradientThreshold") = 30,
         py::arg("minLineLen") = 15,
